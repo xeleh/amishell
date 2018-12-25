@@ -1,0 +1,26 @@
+{
+    "name": "amishell",
+    "version": "1.0.0",
+    "description": "Executes a command in the specified Amiga emulator",
+    "main": "index.js",
+    "author": "xeleh <support@xeleh.com> (https://xeleh.com)",
+    "license": "ISC",
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "postinstall": "",
+        "test": ""
+    },
+    "devDependencies": {
+        "@types/mocha": "^2.2.42",
+        "@types/node": "^8.0.53",
+        "typescript": "^2.6.1"
+    },
+    "dependencies": {
+        "command-line-args": "^5.0.2"
+    },
+    "bin": {
+        "amishell": "./out/main.js"
+    }
+}
