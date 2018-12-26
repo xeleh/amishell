@@ -2,44 +2,54 @@
 
 import * as cp from "child_process";
 import * as net from "net";
-import { debug } from "util";
 
 enum Platform { Mac, Windows, Linux }
+
+const versionLabel = "1.0";
 
 const platform = process.platform === "darwin" ? Platform.Mac : 
   process.platform === "win32" ? Platform.Windows : Platform.Linux;
 
-if (process.argv.length == 2) {
-	showHelp();
-	process.exit();
-}
 parseArgs();
 
 function parseArgs() {
 	let emulator = platform == Platform.Windows ? "winuae" : "fsuae";
 	const optionDefinitions = [
-	{ name: 'activate', alias: 'a', type: Boolean, defaultValue: false },
-	{ name: 'emulator', alias: 'e', type: String, defaultValue: emulator },
-	{ name: 'port', alias: 'p', type: Number, defaultValue: 1234 },
-	{ name: 'timeout', alias: 't', type: Number, defaultValue: 500 },
-	{ name: 'command', type: String, defaultOption: true }];
+	  { name: 'activate', alias: 'a', type: Boolean, defaultValue: false },
+	  { name: 'emulator', alias: 'e', type: String, defaultValue: emulator },
+	  { name: 'help', alias: 'h', type: Boolean },
+	  { name: 'port', alias: 'p', type: Number, defaultValue: 1234 },
+	  { name: 'timeout', alias: 't', type: Number, defaultValue: 500 },
+	  { name: 'version', alias: 'v', type: Boolean },
+	  { name: 'command', type: String, defaultOption: true }
+	];
 	const cliArgs = require('command-line-args');
 	const args = cliArgs(optionDefinitions);
-	if (typeof args.command === "undefined" || args.command == "") {
-		console.error("no command given!");
-		process.exit(1);
+	if (args.help) {
+		help();
+		process.exit(0);
 	}
-	executeCommand(args.command, args.port, args.activate, args.emulator, args.timeout);
+	if (args.version) {
+		version();
+		process.exit(0);
+	}
+	if (typeof args.command === "undefined" || args.command == "") {
+		interactive(args.port, args.activate, args.emulator, args.timeout);
+	} else {
+		executeCommand(args.command, args.port, args.activate, args.emulator, args.timeout);
+	}
 }
 
-function showHelp() {
-	console.log("Executes a command in the specified Amiga emulator.")
+function help() {
+	console.log("Executes commands in a running Amiga emulator.")
 	console.log("Usage: [options] <command>");
 	console.log("\nOptions");
 	console.log("-a, --activate             Activate (send to front) the emulator window");
 	console.log("-e, --emulator <emulator>  Emulator in use (fsuae or winuae)");
-	console.log("-p, --port     <port>      Virtual serial port used by the emulator (default = 1234)");
+	console.log("-h, --help                 Show this help");
+	console.log("-p, --port     <port>      Port used by the emulator for serial comm. (default = 1234)");
 	console.log("-t, --timeout  <timeout>   Timeout in milliseconds (default = 500)");
+	console.log("-v, --version              Show the version number");
 }
 
 function executeCommand(command: string, port: number, activate: boolean, emulator: string, 
@@ -48,6 +58,12 @@ function executeCommand(command: string, port: number, activate: boolean, emulat
 		activateEmulator(emulator);
 	}
 	setTimeout( () => { sendCommand(command, port, timeout); }, activate ? 500 : 0);
+function version() {
+	console.log("AmiShell v" + versionLabel);
+}
+
+function interactive(port: number, activate: boolean, emulator: string, timeout: number) {
+}
 }
 
 function activateEmulator(emulator: string) {
