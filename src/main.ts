@@ -52,18 +52,19 @@ function help() {
 	console.log("-v, --version              Show the version number");
 }
 
-function executeCommand(command: string, port: number, activate: boolean, emulator: string, 
-  timeout: number) {
-	if (activate) {
-		activateEmulator(emulator);
-	}
-	setTimeout( () => { sendCommand(command, port, timeout); }, activate ? 500 : 0);
 function version() {
 	console.log("AmiShell v" + versionLabel);
 }
 
 function interactive(port: number, activate: boolean, emulator: string, timeout: number) {
 }
+
+function executeCommand(command: string, port: number, activate: boolean, emulator: string, 
+  timeout: number) {
+	if (activate) {
+		activateEmulator(emulator);
+	}
+	setTimeout( () => { sendCommand(command, port, timeout); }, activate ? 500 : 0);
 }
 
 function activateEmulator(emulator: string) {
