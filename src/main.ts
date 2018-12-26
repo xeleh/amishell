@@ -72,7 +72,6 @@ function activateEmulator(emulator: string) {
 	case Platform.Mac:
 	case Platform.Linux:
 		script = "\"" + __dirname + "/../scripts/activate.sh" + "\" " + "fs-uae";
-		console.log(script);
 		break;
 	case Platform.Windows:
 		script = "cscript //nologo \"" + __dirname + "\\..\\scripts\\activate.vbs" + "\" ";
@@ -87,13 +86,7 @@ function activateEmulator(emulator: string) {
 		break;
 	}
 	if (script != "") {
-		exec(script);
-	}
-}
-
-function exec(command: string) {
-	if (command) {
-		cp.exec(command, (error, stdout, stderr) => {
+		cp.exec(script, (error, stdout, stderr) => {
 			if (error) {
 				console.error(error.message);
 			}
