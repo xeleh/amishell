@@ -2,17 +2,18 @@
 
 import * as cp from "child_process";
 import * as net from "net";
-
-enum Platform { Mac, Windows, Linux }
+import * as readline from "readline";
 
 const versionLabel = "1.0";
+
+enum Platform { Mac, Windows, Linux }
 
 const platform = process.platform === "darwin" ? Platform.Mac : 
   process.platform === "win32" ? Platform.Windows : Platform.Linux;
 
 parseArgs();
 
-function parseArgs() {
+async function parseArgs() {
 	let emulator = platform == Platform.Windows ? "winuae" : "fsuae";
 	const optionDefinitions = [
 	  { name: 'activate', alias: 'a', type: Boolean, defaultValue: false },
@@ -33,11 +34,12 @@ function parseArgs() {
 		version();
 		process.exit(0);
 	}
-	if (typeof args.command === "undefined" || args.command == "") {
-		interactive(args.port, args.activate, args.emulator, args.timeout);
-	} else {
-		executeCommand(args.command, args.port, args.activate, args.emulator, args.timeout);
+	if (args.command) {
+		await executeCommand(args.command, args.port, args.activate, args.emulator, 	
+			args.timeout);
+		process.exit(0);
 	}
+	shell(args.port, args.activate, args.emulator, args.timeout);
 }
 
 function help() {
@@ -50,21 +52,49 @@ function help() {
 	console.log("-p, --port     <port>      Port used by the emulator for serial comm. (default = 1234)");
 	console.log("-t, --timeout  <timeout>   Timeout in milliseconds (default = 500)");
 	console.log("-v, --version              Show the version number");
+	console.log("\nSpecify no <command> to enter Shell mode.");
 }
 
 function version() {
-	console.log("AmiShell v" + versionLabel);
+	console.log("amishell v" + versionLabel);
 }
 
-function interactive(port: number, activate: boolean, emulator: string, timeout: number) {
+async function shell(port: number, activate: boolean, emulator: string, timeout: number) {
+	let rl = readline.createInterface({
+		input: process.stdin,
+		output: process.stdout
+	});
+	await prompt(rl, port);
+	rl.on('line', async (command: any) => {
+		await executeCommand(command, port, activate, emulator, timeout);
+		await prompt(rl, port);
+	});
+	rl.on('close', () => {
+		console.log('\n[Terminated by user]');
+		terminate();
+	});
 }
 
-function executeCommand(command: string, port: number, activate: boolean, emulator: string, 
-  timeout: number) {
+async function prompt(rl: readline.ReadLine, port: number) {
+	let cwd = await executeCommand("cd", port, false, "", 100, true);
+	rl.setPrompt(cwd.replace("\n","") + "> ");
+	rl.prompt();
+}
+
+async function executeCommand(command: string, port: number, activate: boolean, emulator: string, 
+  timeout: number, quiet: boolean = false): Promise<string> {
 	if (activate) {
 		activateEmulator(emulator);
+		await sleep(250);
 	}
-	setTimeout( () => { sendCommand(command, port, timeout); }, activate ? 500 : 0);
+	await createSocket(port);
+	return await sendCommand(command, timeout, quiet);
+}
+
+function sleep(ms: number) {
+    return new Promise(resolve => {
+        setTimeout(resolve, ms)
+    });
 }
 
 function activateEmulator(emulator: string) {
@@ -97,83 +127,62 @@ function activateEmulator(emulator: string) {
 
 var socket: net.Socket;
 
-var connected: boolean;
-
-enum State {
-	awaitSI,
-	awaitCR,
-	awaitSPACE
+async function createSocket(port: number) {
+	return new Promise(resolve => {
+		socket = net.createConnection(port, "localhost", () => { 
+			socket.setEncoding("ascii");
+			resolve();
+		});
+		socket.on("error", (err) => {
+			console.error("[Communication with Amiga emulator failed]");
+			console.error(err.message);
+			terminate(1);
+		});
+	});
 }
 
-var state: State = State.awaitSI;
-
-function sendCommand(command: string, port: number, timeout: number) {
-	let received = 0;
-	socket = net.createConnection(port, "localhost", () => {
-		connected = true;
-		socket.setEncoding("ascii");
-		send(command);
-	});
-	let timer = restartTimeout(timeout);
-	socket.on("data", (data) => {
-		// send command results (except the AmigaDos prompt chars) to console
-		var response = data.toString();
-		let char = response.charCodeAt(0);
-		switch (state) {
-		case State.awaitSI:
-			response = response.replace("\r", "");
-			if (char == 15) {
-				state = State.awaitCR;
-			} else {
-				if (received > command.length) {
-					process.stdout.write(response);
+async function sendCommand(command: string, timeout: number, quiet: boolean): Promise<string> {
+	return new Promise<string>(resolve => {
+		let result : string = "";
+		let dataLength = 0;
+		let eot : boolean = false;
+		socket.on("data", (data) => {
+			var response = data.toString();
+			// AmigaDos sends ascii char SI (15) as EOT signal
+			if (response.charCodeAt(0) == 15) {
+				eot = true;
+			}
+			if (!eot) {
+				response = response.replace("\r", "");
+				// filter the command itself
+				if (dataLength > command.length) {
+					if (!quiet) {
+						process.stdout.write(response);
+					}
+					result += response;
 				}
-				received += response.length;
-				clearTimeout(timer);
-				timer = restartTimeout(timeout);
+				dataLength += response.length;
 			}
-			break;
-		case State.awaitCR:
-			if (char == 13) {
-				state = State.awaitSPACE;
-			}
-			break;
-		case State.awaitSPACE:
-			if (char == 32) {
-				state = State.awaitSI;
-			}
-			break;
-		}
+		});
+		// the promise will be resolved on timeout
+		socket.setTimeout(timeout);
+		socket.on("timeout", () => {
+			destroySocket();
+			resolve(result);
+		});
+		// send the command
+		socket.write(command + "\r");
 	});
-	socket.on("error", (err) => {
-		console.error("Communication with Amiga emulator failed:");
-		console.error(err.message);
-		destroySocket()
-		process.exit();
-	});
-	socket.on("close", () => {
-		if (connected) {
-			connected = false;
-		}
-		destroySocket();
-	});
-}
-
-function restartTimeout(timeout: number): NodeJS.Timer {
-	return setTimeout( () => { 
-		destroySocket();
-		process.exit();
-	}, timeout);
-}
-
-function send(command: string) {
-	state = State.awaitSI;
-	socket.write(command + "\r");
 }
 
 function destroySocket() {
 	if (socket && !socket.destroyed) {
+		socket.end();
 		socket.destroy();
 	}
-	connected = false;
+}
+
+function terminate(code: number = 0) {
+	destroySocket();
+	process.exit(code);
 }
