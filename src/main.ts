@@ -25,18 +25,19 @@ async function parseArgs() {
 	  { name: 'command', type: String, defaultOption: true }
 	];
 	const cliArgs = require('command-line-args');
-	const args = cliArgs(optionDefinitions);
+	const args = cliArgs(optionDefinitions, { partial: true });
+	if (args._unknown && args._unknown.length > 0) {
+		console.log("amishell: unrecognized option '" +args._unknown[0]+"'");
+		process.exit(1);
+	}
 	if (args.help) {
 		help();
-		process.exit(0);
 	}
 	if (args.version) {
 		version();
-		process.exit(0);
 	}
 	if (args.command) {
-		await executeCommand(args.command, args.port, args.activate, args.emulator, 	
-			args.timeout);
+		await executeCommand(args.command, args.port, args.activate, args.emulator, args.timeout);
 		process.exit(0);
 	}
 	shell(args.port, args.activate, args.emulator, args.timeout);
@@ -53,10 +54,12 @@ function help() {
 	console.log("-t, --timeout  <timeout>   Timeout in milliseconds (default = 500)");
 	console.log("-v, --version              Show the version number");
 	console.log("\nSpecify no <command> to enter Shell mode.");
+	process.exit(0);
 }
 
 function version() {
 	console.log("amishell v" + versionLabel);
+	process.exit(0);
 }
 
 async function shell(port: number, activate: boolean, emulator: string, timeout: number) {
