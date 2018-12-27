@@ -150,6 +150,7 @@ async function sendCommand(command: string, timeout: number, quiet: boolean): Pr
 		let result : string = "";
 		let dataLength = 0;
 		let eot : boolean = false;
+		let prompt = "";
 		socket.on("data", (data) => {
 			var response = data.toString();
 			// AmigaDos sends ascii char SI (15) as EOT signal
@@ -166,6 +167,12 @@ async function sendCommand(command: string, timeout: number, quiet: boolean): Pr
 					result += response;
 				}
 				dataLength += response.length;
+			} else {
+				// wait for complete prompt
+				prompt += response;
+				if (prompt.indexOf("> ") >= 0) {
+					socket.setTimeout(10);
+				}
 			}
 		});
 		// the promise will be resolved on timeout
