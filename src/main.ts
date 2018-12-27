@@ -22,12 +22,12 @@ async function parseArgs() {
 	  { name: 'port', alias: 'p', type: Number, defaultValue: 1234 },
 	  { name: 'timeout', alias: 't', type: Number, defaultValue: 500 },
 	  { name: 'version', alias: 'v', type: Boolean },
-	  { name: 'command', type: String, defaultOption: true }
+	  { name: 'command', type: String, multiple: true, defaultOption: true }
 	];
 	const cliArgs = require('command-line-args');
 	const args = cliArgs(optionDefinitions, { partial: true });
 	if (args._unknown && args._unknown.length > 0) {
-		console.log("amishell: unrecognized option '" +args._unknown[0]+"'");
+		console.log("amishell: unrecognized option '" + args._unknown[0] + "'");
 		process.exit(1);
 	}
 	if (args.help) {
@@ -37,7 +37,8 @@ async function parseArgs() {
 		version();
 	}
 	if (args.command) {
-		await executeCommand(args.command, args.port, args.activate, args.emulator, args.timeout);
+		let command = args.command.join(" ");
+		await executeCommand(command, args.port, args.activate, args.emulator, args.timeout);
 		process.exit(0);
 	}
 	shell(args.port, args.activate, args.emulator, args.timeout);
