@@ -68,13 +68,18 @@ async function shell(port: number, activate: boolean, emulator: string, timeout:
 		input: process.stdin,
 		output: process.stdout
 	});
+	let busy = false;
 	await prompt(rl, port);
 	rl.on('line', async (command: any) => {
-		await executeCommand("", port, false, "", 100, true);
-		if (eot) {
-			await executeCommand(command, port, activate, emulator, timeout);
+		if (!busy) {
+			busy = true;
+			await executeCommand("", port, false, "", 100, true);
+			if (eot) {
+				await executeCommand(command, port, activate, emulator, timeout);
+			}
+			await prompt(rl, port);
+			busy = false;
 		}
-		await prompt(rl, port);
 	});
 	rl.on('close', () => {
 		console.log('\n[Terminated by user]');
