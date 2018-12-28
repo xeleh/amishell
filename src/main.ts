@@ -70,7 +70,10 @@ async function shell(port: number, activate: boolean, emulator: string, timeout:
 	});
 	await prompt(rl, port);
 	rl.on('line', async (command: any) => {
-		await executeCommand(command, port, activate, emulator, timeout);
+		await executeCommand("", port, false, "", 100, true);
+		if (eot) {
+			await executeCommand(command, port, activate, emulator, timeout);
+		}
 		await prompt(rl, port);
 	});
 	rl.on('close', () => {
@@ -80,8 +83,9 @@ async function shell(port: number, activate: boolean, emulator: string, timeout:
 }
 
 async function prompt(rl: readline.ReadLine, port: number) {
-	let cwd = await executeCommand("cd", port, false, "", 100, true);
-	rl.setPrompt(cwd.replace("\n","") + "> ");
+	let cwd = await executeCommand("cd", port, false, "", 250, true);
+	cwd = eot ? cwd.replace("\n","") + "> " : "";
+	rl.setPrompt(cwd);
 	rl.prompt();
 }
 
@@ -97,7 +101,7 @@ async function executeCommand(command: string, port: number, activate: boolean, 
 
 function sleep(ms: number) {
     return new Promise(resolve => {
-        setTimeout(resolve, ms)
+        setTimeout(resolve, ms);
     });
 }
 
@@ -145,11 +149,13 @@ async function createSocket(port: number) {
 	});
 }
 
+var eot : boolean = false;
+
 async function sendCommand(command: string, timeout: number, quiet: boolean): Promise<string> {
 	return new Promise<string>(resolve => {
 		let result : string = "";
 		let dataLength = 0;
-		let eot : boolean = false;
+		eot = false;
 		let prompt = "";
 		socket.on("data", (data) => {
 			var response = data.toString();
@@ -170,7 +176,7 @@ async function sendCommand(command: string, timeout: number, quiet: boolean): Pr
 			} else {
 				// wait for complete prompt
 				prompt += response;
-				if (prompt.indexOf("> ") >= 0) {
+				if (prompt.lastIndexOf("> ") >= 0) {
 					socket.setTimeout(10);
 				}
 			}
