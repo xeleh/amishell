@@ -42,7 +42,7 @@ newshell AUX:
 
 You will need to have the `AUX` mountlist in the `DEVS:DosDrivers` directory.
 
-You may want to rename the `AUX` mountlist as something like `AUXI` under Windows if you have any problems with that particular name.
+You may want to rename the `AUX` mountlist as `AUXI` under Windows if you have any problems with that particular name.
 
 ## Serial Preferences
 Execute the `Prefs:Serial` (2.0+) or `Prefs:Preferences` (1.3) program in your Amiga hard drive and set the serial preferences to these values:
@@ -61,7 +61,9 @@ Execute the `Prefs:Serial` (2.0+) or `Prefs:Preferences` (1.3) program in your A
 	> `amishell dir`
 4. To start the interactive shell:
 	> `amishell`
+5. Use Up/Down arrows for command history.
+6. Use Ctrl+C to exit.
 
 # Credits
-* Coding: by Jose Moreno 'Xeleh' (<jmoreno@xeleh.com>).
+* Coding: Jose Moreno 'Xeleh' (<jmoreno@xeleh.com>).
 * Testing: Javier Romero 'Tolkien'.
