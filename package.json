@@ -1,10 +1,14 @@
 {
     "name": "amishell",
     "version": "1.0.0",
-    "description": "Executes a command in the specified Amiga emulator",
-    "main": "index.js",
-    "author": "xeleh <support@xeleh.com> (https://xeleh.com)",
+    "description": "Interactive shell for the WinUAE and FS-UAE Amiga emulators.",
+    "main": "out/main.js",
+    "author": "xeleh <jmoreno@xeleh.com>",
     "license": "ISC",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/xeleh/amishell.git"
+	},
     "scripts": {
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
@@ -20,7 +24,10 @@
     "dependencies": {
         "command-line-args": "^5.0.2"
     },
+    "files": [
+        "scripts/[^.]*"
+	],
     "bin": {
-        "amishell": "./out/main.js"
+        "amishell": "out/main.js"
     }
 }
