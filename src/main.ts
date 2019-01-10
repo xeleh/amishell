@@ -1,20 +1,14 @@
 #!/usr/bin/env node
 
-import * as cp from "child_process";
-import * as net from "net";
+import * as amishell from "./amishell";
 import * as readline from "readline";
 
 const versionLabel = "1.0";
 
-enum Platform { Mac, Windows, Linux }
-
-const platform = process.platform === "darwin" ? Platform.Mac : 
-  process.platform === "win32" ? Platform.Windows : Platform.Linux;
-
 parseArgs();
 
 async function parseArgs() {
-	let emulator = platform == Platform.Windows ? "winuae" : "fsuae";
+	let emulator = (process.platform === "win32") ? "winuae" : "fsuae";
 	const optionDefinitions = [
 	  { name: 'activate', alias: 'a', type: Boolean, defaultValue: false },
 	  { name: 'emulator', alias: 'e', type: String, defaultValue: emulator },
@@ -36,9 +30,10 @@ async function parseArgs() {
 	if (args.version) {
 		version();
 	}
+	amishell.config(args.emulator, args.port);
 	if (args.command) {
 		let command = args.command.join(" ");
-		await executeCommand(command, args.port, args.activate, args.emulator, args.timeout);
+		await amishell.executeCommand(command, args.activate, args.timeout);
 		process.exit(0);
 	}
 	shell(args.port, args.activate, args.emulator, args.timeout);
@@ -73,9 +68,9 @@ async function shell(port: number, activate: boolean, emulator: string, timeout:
 	rl.on('line', async (command: any) => {
 		if (!busy) {
 			busy = true;
-			await executeCommand("", port, false, "", 100, true);
-			if (eot) {
-				await executeCommand(command, port, activate, emulator, timeout);
+			await amishell.executeCommand("", false, 100, true);
+			if (amishell.eot) {
+				await amishell.executeCommand(command, activate, timeout);
 			}
 			await prompt(rl, port);
 			busy = false;
@@ -83,128 +78,14 @@ async function shell(port: number, activate: boolean, emulator: string, timeout:
 	});
 	rl.on('close', () => {
 		console.log('\n[Terminated by user]');
-		terminate();
+		amishell.terminate();
 	});
 }
 
 async function prompt(rl: readline.ReadLine, port: number) {
-	let cwd = await executeCommand("cd", port, false, "", 250, true);
-	cwd = eot ? cwd.replace("\n","") + "> " : "";
+	let cwd = await amishell.executeCommand("cd", false, 250, true);
+	cwd = amishell.eot ? cwd.replace("\n","") + "> " : "";
 	rl.setPrompt(cwd);
 	rl.prompt();
 }
 
-async function executeCommand(command: string, port: number, activate: boolean, emulator: string, 
-  timeout: number, quiet: boolean = false): Promise<string> {
-	if (activate) {
-		activateEmulator(emulator);
-		await sleep(250);
-	}
-	await createSocket(port);
-	return await sendCommand(command, timeout, quiet);
-}
-
-function sleep(ms: number) {
-    return new Promise(resolve => {
-        setTimeout(resolve, ms);
-    });
-}
-
-function activateEmulator(emulator: string) {
-	let script = "";
-	switch (platform) {
-	case Platform.Mac:
-	case Platform.Linux:
-		script = "\"" + __dirname + "/../scripts/activate.sh" + "\" " + "fs-uae";
-		break;
-	case Platform.Windows:
-		script = "cscript //nologo \"" + __dirname + "\\..\\scripts\\activate.vbs" + "\" ";
-		switch (emulator) {
-		case "fsuae":
-			script += "fs-uae.exe";
-			break;
-		case "winuae":
-			script += "winuae.exe winuae64.exe";
-			break;
-		}
-		break;
-	}
-	if (script != "") {
-		cp.exec(script, (error, stdout, stderr) => {
-			if (error) {
-				console.error(error.message);
-			}
-		});
-	}
-}
-
-var socket: net.Socket;
-
-async function createSocket(port: number) {
-	return new Promise(resolve => {
-		socket = net.createConnection(port, "localhost", () => { 
-			socket.setEncoding("ascii");
-			resolve();
-		});
-		socket.on("error", (err) => {
-			console.error("[Communication with Amiga emulator failed]");
-			console.error(err.message);
-			terminate(1);
-		});
-	});
-}
-
-var eot : boolean = false;
-
-async function sendCommand(command: string, timeout: number, quiet: boolean): Promise<string> {
-	return new Promise<string>(resolve => {
-		let result : string = "";
-		let dataLength = 0;
-		eot = false;
-		let prompt = "";
-		socket.on("data", (data) => {
-			var response = data.toString();
-			// AmigaDos sends ascii char SI (15) as EOT signal
-			if (response.charCodeAt(0) == 15) {
-				eot = true;
-			}
-			if (!eot) {
-				response = response.replace("\r", "");
-				// filter the command itself
-				if (dataLength > command.length) {
-					if (!quiet) {
-						process.stdout.write(response);
-					}
-					result += response;
-				}
-				dataLength += response.length;
-			} else {
-				// wait for complete prompt
-				prompt += response;
-				if (prompt.lastIndexOf("> ") >= 0) {
-					socket.setTimeout(10);
-				}
-			}
-		});
-		// the promise will be resolved on timeout
-		socket.setTimeout(timeout);
-		socket.on("timeout", () => {
-			destroySocket();
-			resolve(result);
-		});
-		// send the command
-		socket.write(command + "\r");
-	});
-}
-
-function destroySocket() {
-	if (socket && !socket.destroyed) {
-		socket.end();
-		socket.destroy();
-	}
-}
-
-function terminate(code: number = 0) {
-	destroySocket();
-	process.exit(code);
-}

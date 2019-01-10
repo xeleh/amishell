@@ -25,6 +25,7 @@
         "command-line-args": "^5.0.2"
     },
     "files": [
+        "out/[^.]*.js",
         "scripts/[^.]*"
 	],
     "bin": {
