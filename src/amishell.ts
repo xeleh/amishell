@@ -6,11 +6,16 @@ export class AmiShell extends EventEmitter {
 
 private emulator: string;
 private port: number;
+private scripts: string;
 
-constructor(emulator: string, port: number) {
+constructor(emulator: string, port: number, scripts: string = null) {
 	super();
 	this.emulator = emulator;
 	this.port = port;
+	if (scripts == null) {
+		scripts = __dirname + "/../scripts";
+	}
+	this.scripts = scripts;
 }
 
 public async executeCommand(command: string, activate: boolean, timeout: number, 
@@ -30,30 +35,30 @@ private sleep(ms: number) {
 }
 
 private activateEmulator() {
-	let script = "";
+	let command = "";
 	switch (process.platform) {
 	case "darwin":
 	case "linux":
-		script = "\"" + __dirname + "/../scripts/activate.sh" + "\" " + "fs-uae";
+		command = "\"" + this.scripts + "/activate.sh" + "\" " + "fs-uae";
 		break;
 	case "win32":
-		script = "cscript //nologo \"" + __dirname + "\\..\\scripts\\activate.vbs" + "\" ";
+		let winPath = this.scripts.replace("/", "\\");
+		command = "cscript //nologo \"" + winPath + "\\activate.vbs" + "\" ";
 		switch (this.emulator) {
 		case "fsuae":
-			script += "fs-uae.exe";
+			command += "fs-uae.exe";
 			break;
 		case "winuae":
-			script += "winuae.exe winuae64.exe";
+			command += "winuae.exe winuae64.exe";
 			break;
 		}
 		break;
 	}
-	if (script != "") {
-		cp.exec(script, (error, stdout, stderr) => {
+	if (command != "") {
+		cp.exec(command, (error, stdout, stderr) => {
 			if (error) {
 				this.destroySocket();
 				this.emit("error", error);
-				console.error(error.message);
 			}
 		});
 	}
