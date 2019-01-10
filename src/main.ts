@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
-import * as amishell from "./amishell";
+import { AmiShell } from "./amishell";
 import * as readline from "readline";
 
 const versionLabel = "1.0";
+
+var amishell : AmiShell;
 
 parseArgs();
 
@@ -30,13 +32,21 @@ async function parseArgs() {
 	if (args.version) {
 		version();
 	}
-	amishell.config(args.emulator, args.port);
+	amishell = new AmiShell(args.emulator, args.port);
+	amishell.on("data",	(data) => { 
+		process.stdout.write(data);
+	});
+	amishell.on("error", (error) => {
+		console.error("[Communication with Amiga emulator failed]");
+		console.error(error.message);
+		terminate(1);
+	});
 	if (args.command) {
 		let command = args.command.join(" ");
 		await amishell.executeCommand(command, args.activate, args.timeout);
 		process.exit(0);
 	}
-	shell(args.port, args.activate, args.emulator, args.timeout);
+	shell(args.activate, args.timeout);
 }
 
 function help() {
@@ -58,13 +68,13 @@ function version() {
 	process.exit(0);
 }
 
-async function shell(port: number, activate: boolean, emulator: string, timeout: number) {
+async function shell(activate: boolean, timeout: number) {
 	let rl = readline.createInterface({
 		input: process.stdin,
 		output: process.stdout
 	});
 	let busy = false;
-	await prompt(rl, port);
+	await prompt(rl);
 	rl.on('line', async (command: any) => {
 		if (!busy) {
 			busy = true;
@@ -72,20 +82,23 @@ async function shell(port: number, activate: boolean, emulator: string, timeout:
 			if (amishell.eot) {
 				await amishell.executeCommand(command, activate, timeout);
 			}
-			await prompt(rl, port);
+			await prompt(rl);
 			busy = false;
 		}
 	});
 	rl.on('close', () => {
 		console.log('\n[Terminated by user]');
-		amishell.terminate();
+		terminate();
 	});
 }
 
-async function prompt(rl: readline.ReadLine, port: number) {
+async function prompt(rl: readline.ReadLine) {
 	let cwd = await amishell.executeCommand("cd", false, 250, true);
 	cwd = amishell.eot ? cwd.replace("\n","") + "> " : "";
 	rl.setPrompt(cwd);
 	rl.prompt();
 }
 
+function terminate(code: number = 0) {
+	process.exit(code);
+}
