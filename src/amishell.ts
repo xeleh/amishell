@@ -38,11 +38,13 @@ private activateEmulator() {
 	let command = "";
 	switch (process.platform) {
 	case "darwin":
+		command = "\"" + this.scripts + "/activate.osa" + "\" " + "fs-uae";
+		break;
 	case "linux":
 		command = "\"" + this.scripts + "/activate.sh" + "\" " + "fs-uae";
 		break;
 	case "win32":
-		let winPath = this.scripts.replace("/", "\\");
+		let winPath = this.scripts.replace(/\//g, "\\");
 		command = "cscript //nologo \"" + winPath + "\\activate.vbs" + "\" ";
 		switch (this.emulator) {
 		case "fsuae":
@@ -94,7 +96,7 @@ private async sendCommand(command: string, timeout: number, quiet: boolean): Pro
 				this.eot = true;
 			}
 			if (!this.eot) {
-				response = response.replace("\r", "");
+				response = response.replace(/\r/g, "");
 				// filter the command itself
 				if (dataLength > command.length) {
 					if (!quiet) {
