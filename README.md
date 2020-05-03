@@ -1,10 +1,12 @@
-# Summary
+# AmiShell
 Interactive shell for the [WinUAE](http://www.winuae.net/) and [FS-UAE](https://fs-uae.net/) Amiga emulators.
 
-# Installation
-To install the package:
+## Installation
+From npm:
+> `npm i amishell`
 
-> `npm install -g amishell-1.0.0.tgz`
+From package:
+> `npm i -g amishell-1.0.0.tgz`
 
 To verify that the command is correctly installed:
 
@@ -12,27 +14,28 @@ To verify that the command is correctly installed:
 
 To uninstall the package:
 
-> `npm uninstall -g amishell`
+> `npm un -g amishell`
 
-# Setup
+## Setup
 The Amiga emulator needs to be properly configured for communication through a virtual serial port.
 
-## FS-UAE  
+### FS-UAE  
 Include the following property in your .fs-uae configuration file:
 
 ```
 serial_port = tcp://0.0.0.0:1234`
 ```
 
-## WinUAE
+### WinUAE
 Include the following lines in your .uae configuration file:
 
 ```
-win32.serial_port=TCP://0.0.0.0:1234 serial_translate=crlf_cr
+win32.serial_port=TCP://0.0.0.0:1234
+serial_translate=crlf_cr
 serial_direct=true
 ```
 
-## User-Startup
+### User-Startup
 Add the following lines to your Amiga `S:User-Startup` file:
 
 ```
@@ -44,7 +47,7 @@ You will need to have the `AUX` mountlist in the `DEVS:DosDrivers` directory.
 
 You may want to rename the `AUX` mountlist as `AUXI` under Windows if you have any problems with that particular name.
 
-## Serial Preferences
+### Serial Preferences
 Execute the `Prefs:Serial` (2.0+) or `Prefs:Preferences` (1.3) program in your Amiga hard drive and set the serial preferences to these values:
 
 * Baud Rate: 31250
@@ -54,7 +57,7 @@ Execute the `Prefs:Serial` (2.0+) or `Prefs:Preferences` (1.3) program in your A
 * Bits/Char: 8
 * Stop Bits: 1
 
-# Usage
+## Usage
 1. Open your properly-configured Amiga emulator of choice.
 2. Open a Terminal or Command Prompt window.
 3. To execute a single command:
@@ -64,6 +67,9 @@ Execute the `Prefs:Serial` (2.0+) or `Prefs:Preferences` (1.3) program in your A
 5. Use Up/Down arrows for command history.
 6. Use Ctrl+C to exit.
 
-# Credits
+## License
+MIT Licensed. Copyright (c) Xeleh 2020.
+
+## Credits
 * Coding: Jose Moreno 'Xeleh' (<jmoreno@xeleh.com>).
 * Testing: Javier Romero 'Tolkien'.

@@ -1,34 +1,49 @@
 {
-    "name": "amishell",
-    "version": "1.0.0",
-    "description": "Interactive shell for the WinUAE and FS-UAE Amiga emulators.",
-    "main": "out/main.js",
-    "author": "xeleh <jmoreno@xeleh.com>",
-    "license": "ISC",
+	"name": "amishell",
+	"version": "1.0.0",
+	"description": "Interactive shell for the WinUAE and FS-UAE Amiga emulators.",
+	"main": "out/main.js",
+	"license": "MIT",
+	"keywords": [
+		"amiga", "commodore",
+		"shell", "cli", "interactive", "console", "terminal", "newshell", "newcli",
+		"emulators", "fsuae", "fs-uae", "winuae", "win-uae",
+		"retro", "retrodev",
+		"crossdev",
+		"68k", "m68k",
+		"vasm", "asmone", "devpac", "asmotor",
+		"sockets",
+		"typescript"
+	],
+	"author": "xeleh <jmoreno@xeleh.com>",
+	"homepage": "https://xeleh.com",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/xeleh/amishell.git"
+		"url": "https://github.com/xeleh/amishell.git"
 	},
-    "scripts": {
-        "vscode:prepublish": "npm run compile",
-        "compile": "tsc -p ./",
-        "watch": "tsc -watch -p ./",
-        "postinstall": "",
-        "test": ""
-    },
-    "devDependencies": {
-        "@types/mocha": "^2.2.42",
-        "@types/node": "^8.0.53",
-        "typescript": "^2.6.1"
-    },
-    "dependencies": {
-        "command-line-args": "^5.0.2"
-    },
-    "files": [
-        "out/[^.]*.js",
-        "scripts/[^.]*"
+	"bugs": {
+		"url": "https://github.com/xeleh/amishell/issues"
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"postinstall": "",
+		"test": ""
+	},
+	"devDependencies": {
+		"@types/mocha": "^2.2.42",
+		"@types/node": "^8.0.53",
+		"typescript": "^2.6.1"
+	},
+	"dependencies": {
+		"command-line-args": "^5.0.2"
+	},
+	"files": [
+		"out/[^.]*.js",
+		"scripts/[^.]*"
 	],
-    "bin": {
-        "amishell": "out/main.js"
-    }
+	"bin": {
+		"amishell": "out/main.js"
+	}
 }
