@@ -1,20 +1,27 @@
 # AmiShell
-Interactive shell for the [WinUAE](http://www.winuae.net/) and [FS-UAE](https://fs-uae.net/) Amiga emulators.
+A shell for the [WinUAE](http://www.winuae.net/) and [FS-UAE](https://fs-uae.net/) Amiga emulators. If you are into retro crossdev, you can use this to ease the "test the created executable in the emulator" part, among other purposes.
 
 ## Installation
-From npm:
-> `npm i amishell`
+To install from npm:
+```
+npm i -g amishell
+```
 
-From package:
-> `npm i -g amishell-1.0.0.tgz`
+To install from a local package:
+```
+npm i -g amishell-1.0.0.tgz
+```
 
 To verify that the command is correctly installed:
-
-> `amishell --help`
+```
+amishell --help
+```
 
 To uninstall the package:
+```
+npm un -g amishell
+```
 
-> `npm un -g amishell`
 
 ## Setup
 The Amiga emulator needs to be properly configured for communication through a virtual serial port.
@@ -23,7 +30,7 @@ The Amiga emulator needs to be properly configured for communication through a v
 Include the following property in your .fs-uae configuration file:
 
 ```
-serial_port = tcp://0.0.0.0:1234`
+serial_port = tcp://0.0.0.0:1234
 ```
 
 ### WinUAE
@@ -59,11 +66,17 @@ Execute the `Prefs:Serial` (2.0+) or `Prefs:Preferences` (1.3) program in your A
 
 ## Usage
 1. Open your properly-configured Amiga emulator of choice.
-2. Open a Terminal or Command Prompt window.
-3. To execute a single command:
-	> `amishell dir`
-4. To start the interactive shell:
-	> `amishell`
+2. Open a Terminal or Command Prompt window in the host machine.
+3. To execute a single command (like `dir`) in the emulator and exit:
+```
+amishell dir
+```
+
+4. To start an interactive shell session:
+```
+amishell
+```
+
 5. Use Up/Down arrows for command history.
 6. Use Ctrl+C to exit.
 
